@@ -1,0 +1,37 @@
+By default, Django signals run in the same database transaction as the caller.
+
+1) Create 2 Models
+
+from django.db import models
+
+class TestModel(models.Model):
+    name = models.CharField(max_length=100)
+
+class LogEntry(models.Model):
+    message = models.CharField(max_length=255)
+    
+
+2) Register the signal 
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import TestModel, LogEntry
+
+@receiver(post_save, sender=TestModel)
+def test_signal(sender, instance, **kwargs):
+    print("Signal executed, creating LogEntry...")
+    LogEntry.objects.create(message=f"Created TestModel instance with name {instance.name}")
+
+3) Run the function
+
+from django.db import transaction
+from myapp.models import TestModel, LogEntry
+
+try:
+    with transaction.atomic():  
+        TestModel.objects.create(name="Test Object")
+        print("error to force rollback...")
+        raise Exception("Error")  
+except Exception as e:
+    print(f"Exception caught: {e}")
+

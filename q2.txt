@@ -1,0 +1,29 @@
+Yes, by default, Django signals run in the same thread as the caller
+
+1) Model 
+
+from django.db import models
+
+class TestModel(models.Model):
+    name = models.CharField(max_length=100)
+
+2) Register signal
+
+import threading
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import TestModel
+
+@receiver(post_save, sender=TestModel)
+def test_signal(sender, instance, **kwargs):
+    print(f"signal thread ID: {threading.get_ident()}")
+
+
+3) Calling this signal
+from myapp.models import TestModel
+import threading
+
+print(f"Caller Thread ID: {threading.get_ident()}")
+TestModel.objects.create(name="Test Object")
+
+Hence we get same Thread ID

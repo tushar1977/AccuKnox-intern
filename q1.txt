@@ -1,0 +1,40 @@
+By default, Django signals are executed synchronously
+
+1) Creating A Django Model
+
+
+from django.db import models
+
+class TestModel(models.Model):
+    name = models.CharField(max_length=100)
+
+2)Register a Signal in signal.py
+
+import time
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import TestModel
+
+@receiver(post_save, sender=TestModel)
+def test_signal(sender, instance, **kwargs):
+    print("started")
+    time.sleep(5)  
+    print("finished")
+
+
+Hence with this code, we can see first it will output started then after 5 sec, it shows finished
+
+To convert to Asynchronously, we can use threading library in python
+
+import threading
+
+@receiver(post_save, sender=TestModel)
+def test_signal_async(sender, instance, **kwargs):
+    def run():
+        print("Signal started")
+        time.sleep(5)
+        print("Signal finished")
+
+    threading.Thread(target=run).start()
+
+With this, the function will run in parellel with the help of threads
